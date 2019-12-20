@@ -1,0 +1,75 @@
+require 'rest-client'
+require "json"
+require 'opcua_client'
+require 'date'
+
+class Tag
+    attr_accessor :name,:value,:successed,:time
+    def initialize(name, value,successed,time)
+        @name = name
+        @value = value
+        @successed = successed
+        @time = time
+    end
+end
+def browser
+   response =  RestClient.get 'http://127.0.0.1:39320/iotgateway/browse' , {accept: :json}
+   data = JSON.parse(response.body)
+   puts data["browseResults"]
+
+end
+
+def getData(data_array)
+    read_request = "http://127.0.0.1:39320/iotgateway/read?ids="
+    data_array.each do |data|
+        read_request += "#{data}&"
+    end
+    read_request =  read_request[0..read_request.length-2]
+    response =  RestClient.get 'http://127.0.0.1:39320/iotgateway/read?ids=Channel1.Device1.Tag1&ids=Channel1.Device1.Tag2&read?ids=Channel1.Device1.tag1&ids=Channel1.Device1.Tag3' , {accept: :json}
+    @data = JSON.parse(response.body)
+    puts data["readResults"]
+end
+data_list = ['Channel1.Device1.Tag1','Channel1.Device1.Tag2','Channel1.Device1.Tag3']
+
+#getData(data_list)
+
+#int32 for Long 
+#int 16 for short
+
+
+def opc_ua_sub
+    cli = OPCUAClient::Client.new
+
+   cli.after_session_created do |cli|
+  subscription_id = cli.create_subscription
+  ns_index = 2
+  node_name = "Channel1.Device1.Tag8"
+  cli.add_monitored_item(subscription_id, ns_index, node_name)
+end
+
+cli.after_data_changed do |subscription_id, monitor_id, server_time, source_time, new_value|
+  #puts("data changed: " + [subscription_id, monitor_id, server_time, source_time, new_value].inspect)
+end
+
+cli.connect("opc.tcp://127.0.0.1:49320")
+
+loop do
+
+  puts "result = #{cli.run_mon_cycle}"
+  sleep(0.2)
+end
+end
+
+
+def opcua_test
+    OPCUAClient.start("opc.tcp://127.0.0.1:49320") do |client|
+        # write to ns=2;s=1
+        puts client.read_int32(2, "Channel1.Device1.Tag8")
+      end
+end
+
+def showtime 
+  puts DateTime.now
+end
+
+showtime

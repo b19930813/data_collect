@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DataCollect</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= javascript_pack_tag 'application' %>
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+<style type="text/css">
+#Navbar{
+  position: relative;
+  
+}
+#Context{
+  position: relative;
+  padding-top: 100px;
+  padding-left: 18%;
+  padding-right: 18%;
+}
+body{
+   background-color: "#eee";
+}
+</style>
+
+
+  </head>
+      <div id="Navbar">
+        <%= react_component("Navbar") %>
+      </div>
+      <div id="Context">
+        <%= yield %>
+      </div>
+</html>
