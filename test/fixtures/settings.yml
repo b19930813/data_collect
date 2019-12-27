@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  rest_server: MyString
+  opc_ua: MyString
+  mqtt: MyString
+
+two:
+  rest_server: MyString
+  opc_ua: MyString
+  mqtt: MyString

@@ -1,12 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { makeStyles } from '@material-ui/core/styles';
+import SwipeableViews from 'react-swipeable-views';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import RestForm from './RestFulForm'
 import OPCFrom from './OPCUA_Form'
+import Index from './Index'
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -15,8 +19,8 @@ function TabPanel(props) {
       component="div"
       role="tabpanel"
       hidden={value !== index}
-      id={`vertical-tabpanel-${index}`}
-      aria-labelledby={`vertical-tab-${index}`}
+      id={`full-width-tabpanel-${index}`}
+      aria-labelledby={`full-width-tab-${index}`}
       {...other}
     >
       {value === index && <Box p={3}>{children}</Box>}
@@ -32,53 +36,62 @@ TabPanel.propTypes = {
 
 function a11yProps(index) {
   return {
-    id: `vertical-tab-${index}`,
-    'aria-controls': `vertical-tabpanel-${index}`,
+    id: `full-width-tab-${index}`,
+    'aria-controls': `full-width-tabpanel-${index}`,
   };
 }
 
 const useStyles = makeStyles(theme => ({
   root: {
-    flexGrow: 1,
     backgroundColor: theme.palette.background.paper,
-    display: 'flex',
-    height: 800,
-  },
-  tabs: {
-    borderRight: `1px solid ${theme.palette.divider}`,
+    width: "100%",
   },
 }));
 
-export default function DataManager(props) {
+export default function FullWidthTabs(props) {
   const classes = useStyles();
+  const theme = useTheme();
   const [value, setValue] = React.useState(0);
+
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
+  const handleChangeIndex = index => {
+    setValue(index);
+  };
+
   return (
     <div className={classes.root}>
-      <Tabs
-        orientation="vertical"
-        variant="scrollable"
-        value={value}
-        onChange={handleChange}
-        aria-label="Vertical tabs example"
-        className={classes.tabs}
+      <AppBar position="static" color="default">
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+          aria-label="full width tabs example"
+        >
+          <Tab label="Rest" {...a11yProps(0) } />
+          <Tab label="MQTT" {...a11yProps(1) } />
+          <Tab label="OPC UA" {...a11yProps(2) } />
+        </Tabs>
+      </AppBar>
+      <SwipeableViews
+        axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+        index={value}
+        onChangeIndex={handleChangeIndex}
       >
-        <Tab label="Restful" {...a11yProps(0)} />
-        <Tab label="MQTT Client" {...a11yProps(1)} />
-        <Tab label="OPC UA" {...a11yProps(2)} />
-      </Tabs>
-      <TabPanel value={value} index={0}>
-       <RestForm data = {props}/>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        MQTT
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        <OPCFrom/>
-      </TabPanel>
+        <TabPanel value={value} index={0} dir={theme.direction}>
+          <RestForm data={props} />
+        </TabPanel>
+        <TabPanel value={value} index={1} dir={theme.direction}>
+          MQTT
+        </TabPanel>
+        <TabPanel value={value} index={2} dir={theme.direction}>
+          <OPCFrom data={props}/>
+        </TabPanel>
+      </SwipeableViews>
     </div>
   );
 }

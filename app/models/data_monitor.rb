@@ -1,0 +1,2 @@
+class DataMonitor < ApplicationRecord
+end

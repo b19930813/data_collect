@@ -8,5 +8,8 @@ Rails.application.routes.draw do
   namespace :api, defaults: {format: 'json'} do
     resources :settings, only: [:index,:show]
     resources :opcua,only: [:show]
+    resources :datagroup
+    resources :test
+    resources :openua,only: [:show]
   end
 end

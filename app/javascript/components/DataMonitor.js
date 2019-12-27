@@ -54,8 +54,8 @@ function getSorting(order, orderBy) {
 const headCells = [
   { id: 'name', numeric: false, disablePadding: true, label: 'Tag NAme' },
   { id: 'value', numeric: true, disablePadding: false, label: 'Value' },
-  { id: 'successed', numeric: true, disablePadding: false, label: 'Successed' },
   { id: 'time', numeric: true, disablePadding: false, label: 'Time' },
+  { id: 'source', numeric: true, disablePadding: false, label: 'Source' },
 ];
 
 function EnhancedTableHead(props) {
@@ -224,7 +224,7 @@ export default function RestFulForm(props) {
   // ];
 
   React.useEffect(() => {
-    console.log(props.data.readResults);
+    console.log(props.data);
    
     props.data.readResults.forEach(element => {
       //console.log(element.id);
@@ -338,9 +338,9 @@ export default function RestFulForm(props) {
                       <TableCell component="th" id={labelId} scope="row" padding="none">
                         {row.name}
                       </TableCell>
-                      <TableCell align="right">{row.value}</TableCell>
-                      <TableCell align="right">{row.successed}</TableCell>
+                      <TableCell align="right">{row.value}</TableCell>                
                       <TableCell align="right">{row.time}</TableCell>
+                      <TableCell align="right">{props.data.source}</TableCell>
                     </TableRow>
                   );
                 })}

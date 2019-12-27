@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
+import axios from 'axios'
 import { lighten, makeStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -20,6 +21,14 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import Button from '@material-ui/core/Button';
+
+// component , Rest Dialog 
 function createData(name, successed, reason) {
   return { name, successed, reason };
 }
@@ -111,7 +120,6 @@ EnhancedTableHead.propTypes = {
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
-    paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(1),
   },
   highlight:
@@ -129,46 +137,8 @@ const useToolbarStyles = makeStyles(theme => ({
   },
 }));
 
-const EnhancedTableToolbar = props => {
-  const classes = useToolbarStyles();
-  const { numSelected } = props;
 
-  return (
-    <Toolbar
-      className={clsx(classes.root, {
-        [classes.highlight]: numSelected > 0,
-      })}
-    >
-      {numSelected > 0 ? (
-        <Typography className={classes.title} color="inherit" variant="subtitle1">
-          {numSelected} 筆資料被選擇
-        </Typography>
-      ) : (
-          <Typography className={classes.title} variant="h6" id="tableTitle">
-            RestFul Data Browser
-        </Typography>
-        )}
 
-      {numSelected > 0 ? (
-        <Tooltip title="Add">
-          <IconButton aria-label="delete">
-            <AddCircleIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-          <Tooltip title="Filter list">
-            <IconButton aria-label="filter list">
-              <FilterListIcon />
-            </IconButton>
-          </Tooltip>
-        )}
-    </Toolbar>
-  );
-};
-
-EnhancedTableToolbar.propTypes = {
-  numSelected: PropTypes.number.isRequired,
-};
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -201,30 +171,169 @@ export default function RestFulForm(props) {
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState({
     data: []
   });
+  const [checkState, setCheckState] = React.useState({
+    DM: false,
+    DL: false
+  })
+  //開關對話視窗用
+
 
   React.useEffect(() => {
     //如果RestFul沒有回傳資料時的修改
     var temp = [];
-    try{
-    props.data.data.browseResults.forEach(element => {
-      temp.push(createData(element.id,props.data.data.succeeded.toString(),props.data.data.reason));
-   })
-    setRows({ data: temp })
-  }
-  catch (ex){
-    console.log('RESTFul尚無資料');
-  }
+    try {
+      props.data.data.browseResults.forEach(element => {
+        temp.push(createData(element.id, props.data.data.succeeded.toString(), props.data.data.reason));
+      })
+      setRows({ data: temp })
+    }
+    catch (ex) {
+      console.log('RESTFul尚無資料');
+    }
   }, []);
+
+  const handleRestSubmit = event => {
+    //發送api到後端拆解
+    event.preventDefault();
+    console.log(selected);
+    const data = {
+      data: selected,
+      source: "rest"
+    }
+    if (checkState.DM) {
+      axios
+        .post('/api/datagroup', data)
+        .then(response => {
+          if (response.data.state == 200) {
+            alert("加入成功");
+          }
+          else {
+            alert("加入失敗");
+          }
+        })
+    }
+    if (checkState.DL){
+      console.log("加入到資料蒐集");
+    }
+    // axios
+    // .get('/api/datagroup')
+    // .then(response => {
+    //   console.log(response);
+    // })
+
+  }
+
+  const handleCheckBoxChange = name => event => {
+    setCheckState({ ...checkState, [name]: event.target.checked });
+  }
+
+
+  //Create Dialog Form 
+  const MyDialog = () => {
+    return (
+      <div>
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{"加入Tag"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              可以選擇加Tag加入至監控區，或是資料記錄區
+            </DialogContentText>
+            <div>
+              <FormControlLabel
+                control={
+                  <Checkbox checked={checkState.DM} onChange={handleCheckBoxChange('DM')} />
+                }
+                label="加入資料監控"
+              />
+            </div>
+            <div>
+              <FormControlLabel
+                control={
+                  <Checkbox checked={checkState.DL} onChange={handleCheckBoxChange('DL')} />
+                }
+                label="加入資料紀錄"
+              />
+            </div>
+
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setOpen(false)}
+              color="primary">
+              取消
+            </Button>
+            <Button
+              onClick={handleRestSubmit}
+              color="primary" autoFocus>
+              完成
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    );
+  }
+
+  const EnhancedTableToolbar = props => {
+    const classes = useToolbarStyles();
+    const { numSelected } = props;
+
+    return (
+      <Toolbar
+        className={clsx(classes.root, {
+          [classes.highlight]: numSelected > 0,
+        })}
+      >
+        {numSelected > 0 ? (
+          <Typography className={classes.title} color="inherit" variant="subtitle1">
+            {numSelected} 筆資料被選擇
+          </Typography>
+        ) : (
+            <Typography className={classes.title} variant="h6" id="tableTitle">
+              RestFul Data Browser
+          </Typography>
+          )}
+
+        {numSelected > 0 ? (
+          <Tooltip title="Add">
+            <IconButton aria-label="add"
+              onClick={() => setOpen(true)}
+            >
+              <AddCircleIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+            <Tooltip title="Filter list">
+              <IconButton aria-label="filter list"
+              >
+                <FilterListIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+      </Toolbar>
+    );
+  };
+
+  EnhancedTableToolbar.propTypes = {
+    numSelected: PropTypes.number.isRequired,
+  };
 
   const handleRequestSort = (event, property) => {
     const isDesc = orderBy === property && order === 'desc';
     setOrder(isDesc ? 'asc' : 'desc');
     setOrderBy(property);
   };
+
+
 
   const handleSelectAllClick = event => {
     if (event.target.checked) {
@@ -339,13 +448,19 @@ export default function RestFulForm(props) {
           page={page}
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
-          labelRowsPerPage = "顯示筆數"
+          labelRowsPerPage="顯示筆數"
         />
       </Paper>
-      <FormControlLabel
-        control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="調整padding"
-      />
+      <span>
+        <FormControlLabel
+          control={<Switch checked={dense} onChange={handleChangeDense} />}
+          label="調整padding"
+        />
+      </span>
+      <span style={{ "float": "right" }}>
+        Rest Server:{props.data.rest_server}
+      </span>
+      <MyDialog />
     </div>
   );
 }

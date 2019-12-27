@@ -1,7 +1,5 @@
-require 'opcua_client'
+require 'rest-client'
 
-OPCUAClient.start("opc.tcp://127.0.0.1:49320") do |client|
-  # write to ns=2;s=1
-  result = client.read_float(2, "Channel1.Device1.Tag1")
-  puts result
-end
+response =  RestClient.get "http://127.0.0.1:39320/iotgateway/browse" , {accept: :json}
+@data = JSON.parse(response.body)
+puts response[:succeeded]
