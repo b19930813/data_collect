@@ -19,10 +19,9 @@ import Tooltip from '@material-ui/core/Tooltip';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import FilterListIcon from '@material-ui/icons/FilterList';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-
-function createData(name, value, successed,time) {
-  return { name, value, successed , time };
+import DeleteIcon from '@material-ui/icons/Delete';
+function createData(name, value, source,time) {
+  return { name, value, source , time };
 }
 
 
@@ -52,7 +51,7 @@ function getSorting(order, orderBy) {
 }
 
 const headCells = [
-  { id: 'name', numeric: false, disablePadding: true, label: 'Tag NAme' },
+  { id: 'name', numeric: false, disablePadding: true, label: 'Tag Name' },
   { id: 'value', numeric: true, disablePadding: false, label: 'Value' },
   { id: 'time', numeric: true, disablePadding: false, label: 'Time' },
   { id: 'source', numeric: true, disablePadding: false, label: 'Source' },
@@ -131,46 +130,7 @@ const useToolbarStyles = makeStyles(theme => ({
   },
 }));
 
-const EnhancedTableToolbar = props => {
-  const classes = useToolbarStyles();
-  const { numSelected } = props;
 
-  return (
-    <Toolbar
-      className={clsx(classes.root, {
-        [classes.highlight]: numSelected > 0,
-      })}
-    >
-      {numSelected > 0 ? (
-        <Typography className={classes.title} color="inherit" variant="subtitle1">
-          {numSelected} 筆資料被選擇
-        </Typography>
-      ) : (
-          <Typography className={classes.title} variant="h6" id="tableTitle">
-            RestFul Data Browser
-        </Typography>
-        )}
-
-      {numSelected > 0 ? (
-        <Tooltip title="Add">
-          <IconButton aria-label="delete">
-            <AddCircleIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-          <Tooltip title="Filter list">
-            <IconButton aria-label="filter list">
-              <FilterListIcon />
-            </IconButton>
-          </Tooltip>
-        )}
-    </Toolbar>
-  );
-};
-
-EnhancedTableToolbar.propTypes = {
-  numSelected: PropTypes.number.isRequired,
-};
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -201,44 +161,69 @@ export default function RestFulForm(props) {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('successed');
   const [selected, setSelected] = React.useState([]);
+  const [selectedSource,setSelectedSource] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState({
     data: []
   });
-  // const rows = [
-  //   createData('Cupcake', 305, 3.7, 67, 4.3),
-  //   createData('Donut', 452, 25.0, 51, 4.9),
-  //   createData('Eclair', 262, 16.0, 24, 6.0),
-  //   createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  //   createData('Gingerbread', 356, 16.0, 49, 3.9),
-  //   createData('Honeycomb', 408, 3.2, 87, 6.5),
-  //   createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  //   createData('Jelly Bean', 375, 0.0, 94, 0.0),
-  //   createData('KitKat', 518, 26.0, 65, 7.0),
-  //   createData('Lollipop', 392, 0.2, 98, 0.0),
-  //   createData('Marshmallow', 318, 0, 81, 2.0),
-  //   createData('Nougat', 360, 19.0, 9, 37.0),
-  //   createData('Oreo', 437, 18.0, 63, 4.0),
-  // ];
 
   React.useEffect(() => {
-    console.log(props.data);
-   
-    props.data.readResults.forEach(element => {
-      //console.log(element.id);
-      // createData(element.id,props.data.data.succeeded.toString(),props.data.data.reason)
-    });
+    console.log(props.data.opcua.opcua_tag);
     var temp = [];
     props.data.readResults.forEach(element => {
-
-      temp.push(createData(element.id,element.v,element.s.toString(),element.t));
+      temp.push(createData(element.id,element.v,'RestFul',element.t));
    })
-
+   props.data.opcua.opcua_tag.forEach(element => {
+     temp.push(createData(element.Name,element.Value,'OPCUA',element.time));
+   })
     setRows({ data: temp })
-
   }, []);
+
+  const EnhancedTableToolbar = props => {
+    const classes = useToolbarStyles();
+    const { numSelected } = props;
+  
+    return (
+      <Toolbar
+        className={clsx(classes.root, {
+          [classes.highlight]: numSelected > 0,
+        })}
+      >
+        {numSelected > 0 ? (
+          <Typography className={classes.title} color="inherit" variant="subtitle1">
+            {numSelected} 筆資料被選擇
+          </Typography>
+        ) : (
+            <Typography className={classes.title} variant="h6" id="tableTitle">
+              RestFul Data Browser
+          </Typography>
+          )}
+  
+        {numSelected > 0 ? (
+          <Tooltip title="刪除Tag">
+            <IconButton 
+            aria-label="delete"
+            onClick = {handleTagDelete}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+            <Tooltip title="Filter list">
+              <IconButton aria-label="filter list">
+                <FilterListIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+      </Toolbar>
+    );
+  };
+  
+  EnhancedTableToolbar.propTypes = {
+    numSelected: PropTypes.number.isRequired,
+  };
 
   const handleRequestSort = (event, property) => {
     const isDesc = orderBy === property && order === 'desc';
@@ -249,30 +234,46 @@ export default function RestFulForm(props) {
   const handleSelectAllClick = event => {
     if (event.target.checked) {
       const newSelecteds = rows.data.map(n => n.name);
+      const newSelectedSource = rows.data.map(n => n.source)
       setSelected(newSelecteds);
+      setSelectedSource(newSelectedSource);
       return;
     }
     setSelected([]);
+    setSelectedSource([]);
   };
+ 
+  const handleTagDelete = event =>{
+    //需要取得兩總資料 Tag Name 跟 Source
+    console.log(selectedSource);
+  }
 
-  const handleClick = (event, name) => {
+  const handleClick = (event, name,source) => {
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
-
+    let newSelectedSource = [];
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, name);
+      newSelectedSource = newSelectedSource.concat(selectedSource,source);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
+      newSelectedSource = newSelectedSource.concat(selectedSource.slice(1));
     } else if (selectedIndex === selected.length - 1) {
       newSelected = newSelected.concat(selected.slice(0, -1));
+      newSelectedSource = newSelectedSource.concat(newSelectedSource.slice(0,-1));
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
         selected.slice(selectedIndex + 1),
       );
+      newSelectedSource = newSelectedSource.concat(
+        newSelectedSource.slice(0,selectedIndex),
+        newSelectedSource.slice(selectedIndex + 1 ),
+      );
     }
 
     setSelected(newSelected);
+    setSelectedSource(newSelectedSource);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -322,11 +323,11 @@ export default function RestFulForm(props) {
                   return (
                     <TableRow
                       hover
-                      onClick={event => handleClick(event, row.name)}
+                      onClick={event => handleClick(event, row.name,row,row.source)}
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={row.name}
+                      key={index}
                       selected={isItemSelected}
                     >
                       <TableCell padding="checkbox">
@@ -340,7 +341,7 @@ export default function RestFulForm(props) {
                       </TableCell>
                       <TableCell align="right">{row.value}</TableCell>                
                       <TableCell align="right">{row.time}</TableCell>
-                      <TableCell align="right">{props.data.source}</TableCell>
+                      <TableCell align="right">{row.source}</TableCell>
                     </TableRow>
                   );
                 })}

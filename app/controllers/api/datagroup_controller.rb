@@ -3,7 +3,6 @@
 module API
     class Api::DatagroupController < ApplicationController
       skip_before_action :verify_authenticity_token 
-
       def index
         puts 'index'
       end
@@ -27,6 +26,10 @@ module API
       def update
       end
 
+      def destroy
+        DataMonitor.where("tag_name = #{params['name']} AND source = #{params['source']}").destroy_all
+      end
+
       private
       #no = string
       def datatype_change(no)
@@ -44,7 +47,6 @@ module API
            return 'None'
          end
       end
-
     end
 end
   

@@ -60,16 +60,30 @@ loop do
 end
 end
 
-
-def opcua_test
-    OPCUAClient.start("opc.tcp://127.0.0.1:49320") do |client|
+#tag = Hash
+def get_opcua(tag)
+    opcua_server = "opc.tcp://127.0.0.1:49320"
+    opcua_data = {}
+    OPCUAClient.start(opcua_server) do |client|
         # write to ns=2;s=1
-        puts client.read_int32(2, "Channel1.Device1.Tag8")
+         tag_value = client.read_int32(2, tag)
+         opcua_data = {tagName:tag,value:tag_value,time:DateTime.now}
       end
+    opcua_data
 end
 
-def showtime 
-  puts DateTime.now
+def getData 
+   data = {
+       readResults:[
+       {id: "Tag1",s:true},
+       {id: "Tag2",s:true},
+       {id: "Tag3",s:true}
+   ]
+  # data[:opcua] = get_opcua("Channel1.Device1.Tag8")
+}
+end
+def hash_test
+   date = DateTime.now
 end
 
-showtime
+print hash_test

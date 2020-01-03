@@ -197,8 +197,8 @@ export default function EnhancedTable(props) {
         data: []
     });
     const [checkState, setCheckState] = React.useState({
-        DM: false,
-        DL: false
+        DM: true,
+        DL: true
     })
 
     const [opcuaTag, setOpcuaTag] = React.useState("");
@@ -313,7 +313,7 @@ export default function EnhancedTable(props) {
             datatype:selectedDatatype,
             source: "OPCUA",
         }
-        console.log(data);
+  
         if (checkState.DM) {
             axios
                 .post('/api/datagroup', data)

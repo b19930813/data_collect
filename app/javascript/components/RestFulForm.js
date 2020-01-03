@@ -177,11 +177,10 @@ export default function RestFulForm(props) {
     data: []
   });
   const [checkState, setCheckState] = React.useState({
-    DM: false,
-    DL: false
+    DM: true,
+    DL: true
   })
   //開關對話視窗用
-
 
   React.useEffect(() => {
     //如果RestFul沒有回傳資料時的修改

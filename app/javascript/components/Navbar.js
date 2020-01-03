@@ -24,8 +24,7 @@ const transPage =(page) =>{
         document.location.href = "/";
         break;
         case '資料紀錄':
-        //document.location.href = "/dataCollector"
-        document.location.href = "#"
+        document.location.href = "/dataCollector"
         break;
         case '資料管理':
         document.location.href = "/dataManager"
