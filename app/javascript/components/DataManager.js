@@ -7,9 +7,9 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
-import RestForm from './RestFulForm'
-import OPCFrom from './OPCUA_Form'
-import Index from './Index'
+import RestForm from './RestFulForm';
+import OPCForm from './OPCUA_Form';
+import MQTTForm from './MQTT_Form';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -86,10 +86,10 @@ export default function FullWidthTabs(props) {
           <RestForm data={props} />
         </TabPanel>
         <TabPanel value={value} index={1} dir={theme.direction}>
-          MQTT
+          <MQTTForm/>
         </TabPanel>
         <TabPanel value={value} index={2} dir={theme.direction}>
-          <OPCFrom data={props}/>
+          <OPCForm data={props}/>
         </TabPanel>
       </SwipeableViews>
     </div>

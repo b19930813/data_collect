@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  value: MyString
+  timestamp: 2020-01-09 17:10:03
+  quality: false
+
+two:
+  name: MyString
+  value: MyString
+  timestamp: 2020-01-09 17:10:03
+  quality: false

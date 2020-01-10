@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios'
 import clsx from 'clsx';
 import { lighten, makeStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
@@ -20,8 +21,19 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import DeleteIcon from '@material-ui/icons/Delete';
-function createData(name, value, source,time) {
-  return { name, value, source , time };
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import TextField from '@material-ui/core/TextField';
+//component
+import ErrorTag from "./ErrorTag"
+
+
+function createData(id, name, value, source, time) {
+  return { id, name, value, source, time };
 }
 
 
@@ -154,6 +166,16 @@ const useStyles = makeStyles(theme => ({
     top: 20,
     width: 1,
   },
+  Botton:{
+    height: '55px',
+    marginLeft: '5px'
+  },
+  Text:{
+    width:'90%'
+  },
+  Submit:{
+    marginTop: '10px'
+  }
 }));
 
 export default function RestFulForm(props) {
@@ -161,30 +183,43 @@ export default function RestFulForm(props) {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('successed');
   const [selected, setSelected] = React.useState([]);
-  const [selectedSource,setSelectedSource] = React.useState([]);
+  const [selectedSource, setSelectedSource] = React.useState([]);
+  const [selectedName, setSelectedName] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [open, setOpen] = React.useState(false);
+  const [writeValue,setWriteValue] = React.useState('');
   const [rows, setRows] = React.useState({
     data: []
   });
 
   React.useEffect(() => {
-    console.log(props.data.opcua.opcua_tag);
     var temp = [];
-    props.data.readResults.forEach(element => {
-      temp.push(createData(element.id,element.v,'RestFul',element.t));
-   })
-   props.data.opcua.opcua_tag.forEach(element => {
-     temp.push(createData(element.Name,element.Value,'OPCUA',element.time));
-   })
+    var index = 0
+    //加入是否為空值的判斷
+    if (props.data) {
+      //判斷是否有RestFul data
+      if (props.data.readResults) {
+        props.data.readResults.forEach(element => {
+          temp.push(createData(index, element.id, element.v, 'RestFul', element.t));
+          index++;
+        })
+      }
+      if (props.data.opcua.opcua_tag) {
+        props.data.opcua.opcua_tag.forEach(element => {
+          temp.push(createData(index, element.Name, element.Value, 'OPCUA', element.time));
+          index++;
+        })
+      }
+    }
     setRows({ data: temp })
   }, []);
 
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
     const { numSelected } = props;
-  
+
     return (
       <Toolbar
         className={clsx(classes.root, {
@@ -197,15 +232,15 @@ export default function RestFulForm(props) {
           </Typography>
         ) : (
             <Typography className={classes.title} variant="h6" id="tableTitle">
-              RestFul Data Browser
+              Data Browser
           </Typography>
           )}
-  
+
         {numSelected > 0 ? (
           <Tooltip title="刪除Tag">
-            <IconButton 
-            aria-label="delete"
-            onClick = {handleTagDelete}
+            <IconButton
+              aria-label="delete"
+              onClick={handleTagDelete}
             >
               <DeleteIcon />
             </IconButton>
@@ -220,7 +255,7 @@ export default function RestFulForm(props) {
       </Toolbar>
     );
   };
-  
+
   EnhancedTableToolbar.propTypes = {
     numSelected: PropTypes.number.isRequired,
   };
@@ -233,47 +268,92 @@ export default function RestFulForm(props) {
 
   const handleSelectAllClick = event => {
     if (event.target.checked) {
-      const newSelecteds = rows.data.map(n => n.name);
-      const newSelectedSource = rows.data.map(n => n.source)
+      const newSelecteds = rows.data.map(n => n.id);
+      const newSelectedSource = rows.data.map(n => n.source);
+      const newSelectedName = rows.data.map(n => n.name);
       setSelected(newSelecteds);
       setSelectedSource(newSelectedSource);
+      setSelectedName(newSelectedName);
       return;
     }
     setSelected([]);
     setSelectedSource([]);
+    setSelectedSource([]);
   };
- 
-  const handleTagDelete = event =>{
-    //需要取得兩總資料 Tag Name 跟 Source
-    console.log(selectedSource);
+  
+  const handleWriteValue = event =>{
+    setWriteValue(event.target.value);
   }
 
-  const handleClick = (event, name,source) => {
-    const selectedIndex = selected.indexOf(name);
+  const handleWriteClick = event =>{
+    event.preventDefault();
+    //打write tag api ，打到datagroup update 
+    
+
+  }
+
+  const handleTagDelete = event => {
+    //需要取得兩總資料 Tag Name 跟 Source
+    axios
+      .delete(`api/datagroup/deleteSelected`, { data: { name: selectedName, source: selectedSource } })
+      .then(response => {
+        if (response.data.state === 200) {
+          var temp = rows.data.filter((row) => {
+            var result = true;
+            for (let i = 0; i < selectedName.length; i++) {
+              //console.log(row.name == selectedName[i] && row.source == selectedSource[i]);
+              if (row.name == selectedName[i] && row.source == selectedSource[i]) {
+                result = true;
+                return;
+              }
+            }
+            return result;
+          })
+          setRows({ data: temp })
+        }
+        else {
+          alert("刪除失敗");
+        }
+      }
+      )
+
+  }
+
+  const handleClick = (event, index, name, source) => {
+    const selectedIndex = selected.indexOf(index); //index為避免source不同Name相同
     let newSelected = [];
     let newSelectedSource = [];
+    let newSelectedName = [];
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-      newSelectedSource = newSelectedSource.concat(selectedSource,source);
+      newSelected = newSelected.concat(selected, index);
+      newSelectedSource = newSelectedSource.concat(selectedSource, source);
+      newSelectedName = newSelectedName.concat(selectedName, name);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
       newSelectedSource = newSelectedSource.concat(selectedSource.slice(1));
+      newSelectedName = newSelectedName.concat(selectedName.slice(1));
     } else if (selectedIndex === selected.length - 1) {
       newSelected = newSelected.concat(selected.slice(0, -1));
-      newSelectedSource = newSelectedSource.concat(newSelectedSource.slice(0,-1));
+      newSelectedSource = newSelectedSource.concat(newSelectedSource.slice(0, -1));
+      newSelectedName = newSelectedName.concat(newSelectedName.slice(0, -1));
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
         selected.slice(selectedIndex + 1),
       );
       newSelectedSource = newSelectedSource.concat(
-        newSelectedSource.slice(0,selectedIndex),
-        newSelectedSource.slice(selectedIndex + 1 ),
+        newSelectedSource.slice(0, selectedIndex),
+        newSelectedSource.slice(selectedIndex + 1),
+      );
+      newSelectedName = newSelectedName.concat(
+        selectedName.slice(0, selectedIndex),
+        selectedName.slice(selectedIndex + 1),
       );
     }
 
     setSelected(newSelected);
     setSelectedSource(newSelectedSource);
+    setSelectedName(newSelectedName);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -292,6 +372,30 @@ export default function RestFulForm(props) {
   const isSelected = name => selected.indexOf(name) !== -1;
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.data.length - page * rowsPerPage);
+
+  const MyDialog = () => {
+    return (
+      <div>
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">無法抓取的Tag</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              <ErrorTag props={props.bad_tag} />
+            </DialogContentText>
+
+          </DialogContent>
+          <DialogActions>
+
+          </DialogActions>
+        </Dialog>
+      </div>
+    );
+  }
 
   return (
     <div className={classes.root}>
@@ -316,18 +420,18 @@ export default function RestFulForm(props) {
             <TableBody>
               {stableSort(rows.data, getSorting(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+                .map((row) => {
+                  const isItemSelected = isSelected(row.id);
+                  const labelId = `enhanced-table-checkbox-${row.id}`;
 
                   return (
                     <TableRow
                       hover
-                      onClick={event => handleClick(event, row.name,row,row.source)}
+                      onClick={event => handleClick(event, row.id, row.name, row.source)}
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={index}
+                      key={row.id}
                       selected={isItemSelected}
                     >
                       <TableCell padding="checkbox">
@@ -339,7 +443,7 @@ export default function RestFulForm(props) {
                       <TableCell component="th" id={labelId} scope="row" padding="none">
                         {row.name}
                       </TableCell>
-                      <TableCell align="right">{row.value}</TableCell>                
+                      <TableCell align="right">{row.value}</TableCell>
                       <TableCell align="right">{row.time}</TableCell>
                       <TableCell align="right">{row.source}</TableCell>
                     </TableRow>
@@ -361,13 +465,41 @@ export default function RestFulForm(props) {
           page={page}
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
-          labelRowsPerPage = "顯示筆數"
+          labelRowsPerPage="顯示筆數"
         />
       </Paper>
       <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="調整padding"
       />
+      <Button
+        variant="contained"
+        color="secondary"
+        style={{ "float": "right" }}
+        onClick={() => setOpen(true)}
+      >
+        Error Tag
+      </Button>
+      <div className = {classes.Submit}>
+        <TextField
+          variant="outlined"
+          id="Tag value"
+          label="Tag value"
+          name="Tag value"
+          className={classes.Text}
+          onChange={handleWriteValue}
+        />
+        <Button
+          className = {classes.Botton}
+          variant="contained"
+          color="primary"
+          onClick={handleWriteClick}
+        >
+          Write
+      </Button>
+      </div>
+
+      <MyDialog />
     </div>
   );
 }

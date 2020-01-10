@@ -319,7 +319,7 @@ export default function EnhancedTable(props) {
                 .post('/api/datagroup', data)
                 .then(response => {
                     if (response.data.state == 200) {
-                        alert("加入成功");
+                        setOpen(false);
                     }
                     else {
                         alert("加入失敗");

@@ -1,5 +1,5 @@
 module API
-    class Api::DatagroupController < ApplicationController
+    class Api::DataloggerController < ApplicationController
       skip_before_action :verify_authenticity_token 
       def index
         puts 'index'
@@ -10,17 +10,15 @@ module API
   
       def create
         begin
-          puts params[:data]
           params[:data].each_with_index do |tag_data,index|
             if params[:datatype].nil?
-              @DataMonitors = DataMonitor.find_or_create_by(tag_name:tag_data,source:params[:source])
+              @DataLoggers = DataLogger.find_or_create_by(tag_name:tag_data,source:params[:source])
             else
-              @DataMonitors = DataMonitor.find_or_create_by(tag_name:tag_data,source:params[:source],datatype:params[:datatype][index])
+              @DataLoggers = DataLogger.find_or_create_by(tag_name:tag_data,source:params[:source],datatype:params[:datatype][index])
             end
           end
           render json: {state:200}
         rescue => exception
-          puts exception
           render json: {state:404}
         end
       end
@@ -30,15 +28,14 @@ module API
 
       def destroy
         begin
-          params[:datagroup][:name].each_with_index do |data,index|
-            puts params[:datagroup][:source][index]
-            DataMonitor.where("tag_name = '#{data}' AND source = '#{params[:datagroup][:source][index]}'").destroy_all
-          end
-          render json: {state: 200}
-        rescue 
-          render json: {state:400}
+            params[:datalogger][:name].each_with_index do |data,index|
+                DataLogger.where("tag_name = '#{data}' AND source = '#{params[:datalogger][:source][index]}'").destroy_all
+            end
+            render json: {state: 200}
+        rescue => exception
+            puts exception
+            render json: {state: 400}
         end
-        
       end
 
       private

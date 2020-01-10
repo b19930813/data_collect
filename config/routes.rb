@@ -11,5 +11,8 @@ Rails.application.routes.draw do
     resources :datagroup
     resources :test
     resources :openua,only: [:show]
+    resources :kepware
+    resources :datalogger
+    resources :datatable, only: [:create,:destroy]
   end
 end

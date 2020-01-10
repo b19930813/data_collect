@@ -199,17 +199,16 @@ export default function RestFulForm(props) {
   const handleRestSubmit = event => {
     //發送api到後端拆解
     event.preventDefault();
-    console.log(selected);
     const data = {
       data: selected,
-      source: "rest"
+      source: "RestFul",
     }
     if (checkState.DM) {
       axios
         .post('/api/datagroup', data)
         .then(response => {
           if (response.data.state == 200) {
-            alert("加入成功");
+            setOpen(false)
           }
           else {
             alert("加入失敗");
@@ -217,7 +216,17 @@ export default function RestFulForm(props) {
         })
     }
     if (checkState.DL){
-      console.log("加入到資料蒐集");
+       //寫到資料蒐集
+       axios
+        .post('/api/datalogger', data)
+        .then(response => {
+          if (response.data.state == 200) {
+            setOpen(false)
+          }
+          else {
+            alert("加入失敗");
+          }
+        })
     }
     // axios
     // .get('/api/datagroup')

@@ -86,4 +86,38 @@ def hash_test
    date = DateTime.now
 end
 
-print hash_test
+# 0 1 1 2 3 5 8 13 21 34 55 89 144 233
+def interview_for(index)
+    list = [0,1]
+   if index <2
+    return index 
+   else
+    2.upto(index) do  |i|
+        list.push(list[i-2] + list[i-1])
+    end
+   end
+   list[list.length-1]
+end
+
+
+def interview_recursive(index)
+   if index <2 
+      return index
+   else
+      return interview_recursive(index-2) + interview_recursive(index-1)
+   end
+end
+# puts interview_for(10)
+# puts interview_recursive(10)
+
+def sum(num)
+    return 1 if num == 1
+    return sum(num-1) + num
+end
+
+def factorial(num)
+    return 1 if(num===0) 
+    return factorial(num-1) * num
+end
+
+puts factorial(3)
