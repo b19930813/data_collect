@@ -104,4 +104,7 @@ class PagesController < ApplicationController
         #測試期間暫時都給假資料，setting用於驗證，跟寫入setting table，在跟使用者做關聯性
         @data = Setting.find(1)
     end
+
+    def testPage
+    end
 end

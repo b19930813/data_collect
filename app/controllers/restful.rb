@@ -120,4 +120,13 @@ def factorial(num)
     return factorial(num-1) * num
 end
 
-puts factorial(3)
+def test_function
+    while(true)
+    response =  RestClient.get 'http://192.168.0.27:55235/api/v1/getEvents' , {accept: :json}
+    data = JSON.parse(response.body)
+    puts data
+    sleep(0.001)
+    end
+end
+
+test_function
